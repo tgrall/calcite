@@ -45,16 +45,25 @@ public class FooBar {
     jedisPoolConfig.setMaxTotal(10);
     JedisPool pool = new JedisPool(jedisPoolConfig,  "localhost", 6379);
 
-    try (Jedis jedis = pool.getResource()) {
-      System.out.println(
-          jedis.hgetAll("movie:001")
-      );
-    }
+//    try (Jedis jedis = pool.getResource()) {
+//      System.out.println(
+//          jedis.hgetAll("movie:001")
+//      );
+//    }
 
-    String sql = "SELECT cast(_MAP['title'] AS varchar(120)) AS \"title\", cast(_MAP['genre'] AS "
-        + "varchar(30)) AS \"genre\" "
-                 + " FROM movies "
-        //         + " WHERE _MAP['action'] = 'Action'"
+//    String sql = "SELECT 'title', "
+//        + "'genre' "
+//        //+ " cast('key' AS  varchar(30)) AS \"key\" "
+//        + " FROM movies "
+//         // + " WHERE 'genre' = 'Action'"
+//        ;
+
+        String sql = "SELECT cast(_MAP['title'] AS varchar(120)) AS \"title\", "
+            + " cast(_MAP['genre'] AS varchar(30)) AS \"genre\", "
+            + " cast(_MAP['rating'] AS double) AS \"rating\", "
+        + " cast(_MAP['key'] AS  varchar(30)) AS \"key\" "
+        + " FROM movies "
+        + " WHERE _MAP['genre'] = 'Action'"
         ;
 
     Connection connection = null;
@@ -74,6 +83,7 @@ public class FooBar {
       for(int i = 1; i <= rsmd.getColumnCount(); i++){
         columns.add(rsmd.getColumnName(i));
       }
+
 
       while(rs.next()){
         for(String col : columns) {

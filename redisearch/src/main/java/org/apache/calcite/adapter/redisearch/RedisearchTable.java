@@ -26,16 +26,21 @@ import org.apache.calcite.linq4j.Enumerator;
 import org.apache.calcite.rel.type.RelDataType;
 import org.apache.calcite.rel.type.RelDataTypeFactory;
 import org.apache.calcite.rel.type.RelProtoDataType;
+import org.apache.calcite.rex.RexCall;
+import org.apache.calcite.rex.RexLiteral;
 import org.apache.calcite.rex.RexNode;
 import org.apache.calcite.schema.FilterableTable;
 import org.apache.calcite.schema.ProjectableFilterableTable;
 import org.apache.calcite.schema.SchemaPlus;
 import org.apache.calcite.schema.impl.AbstractTable;
+import org.apache.calcite.sql.SqlKind;
 import org.apache.calcite.sql.type.SqlTypeName;
+import org.apache.calcite.util.Pair;
 import org.apache.calcite.util.Source;
 
 import redis.embedded.Redis;
 
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 
@@ -49,6 +54,7 @@ public class RedisearchTable extends AbstractTable implements FilterableTable {
   final String indexName;
   final RelProtoDataType protoRowType;
   final RedisConfig redisConfig;
+  private final RedisearchDataProcess dataProcess;
 
 
 
@@ -69,6 +75,10 @@ public class RedisearchTable extends AbstractTable implements FilterableTable {
 
     this.redisConfig = new RedisConfig( schema.host, schema.port, schema.database,  schema.password );
 
+    // TODO : see to have a single one for table & enumerator
+    RedisJedisManager redisManager = new RedisJedisManager(redisConfig.getHost(),
+        redisConfig.getPort(), redisConfig.getDatabase(), redisConfig.getPassword(), indexName);
+    this.dataProcess = new RedisearchDataProcess(redisManager.getRediSearchClient());
 
   }
 
@@ -76,15 +86,28 @@ public class RedisearchTable extends AbstractTable implements FilterableTable {
     System.out.println("RedisearchTable.getRowType() " + typeFactory );
 
 
+    // TOD: Make schema as MAP available too
     final RelDataType mapType =
         typeFactory.createMapType(
             typeFactory.createSqlType(SqlTypeName.VARCHAR),
             typeFactory.createTypeWithNullability(
                 typeFactory.createSqlType(SqlTypeName.ANY), true));
 
-    System.out.println("RedisearchTable.getRowType() ===== "+ mapType);
 
-    return typeFactory.builder().add("_MAP", mapType).build();
+      return typeFactory.builder().add("_MAP", mapType).build();
+
+//    // TODO : dynamic schema (I do not know how to use it in Enumerator
+//    Map<String, RelDataType> rowTypeFromData = dataProcess.getRowTypeFromData(typeFactory);
+//
+//    // TODO : see how to use the map directly
+//    RelDataType dataType = typeFactory.createStructType(Pair.zip(
+//        new ArrayList<String>(rowTypeFromData.keySet()),
+//        new ArrayList<RelDataType>(rowTypeFromData.values())
+//    ));
+//    System.out.println("RedisearchTable.getRowType() dataType : " + dataType );
+//
+//    return dataType;
+
 
   }
 
@@ -95,9 +118,44 @@ public class RedisearchTable extends AbstractTable implements FilterableTable {
       "\n\t schema "+ schema
         );
 
+
+    String queryString = " * ";
+
+
+
+    if (filters.size() != 0) {
+
+      // TODO : extract schema info to generate proper string
+      // analyze filter
+      System.out.println(" === FILTER ===");
+      System.out.println( filters.get(0) );
+      RexNode filter = filters.get(0);
+
+      System.out
+          .println("\n\t getKind " + filter.getKind() + "\n\t getType " + filter.getType() + "");
+
+      if (filter.isA(SqlKind.EQUALS)) {
+        final RexCall call = (RexCall) filter;
+        RexNode left = call.getOperands().get(0);
+        RexNode right = call.getOperands().get(1);
+
+        String field = ((RexCall) left).operands.get(1).toString();
+        String value = ((RexLiteral) right).getValue2().toString();
+        field = field.replaceAll("'", "");
+
+        queryString = "@".concat(field).concat(":{").concat(value).concat("}");
+
+      }
+      System.out.println(" === /FILTER ===");
+    }
+
+    final String q = queryString;
+
+
+
     return new AbstractEnumerable<Object[]>() {
       @Override public Enumerator<Object[]> enumerator() {
-        return new RedisearchEnumator(redisConfig, schema, tableName, indexName);
+        return new RedisearchEnumator(redisConfig, schema, tableName, indexName, q);
       }
     };  }
 

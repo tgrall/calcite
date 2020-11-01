@@ -22,7 +22,9 @@ import io.redisearch.Query;
 import io.redisearch.SearchResult;
 import io.redisearch.client.Client;
 
-import redis.clients.jedis.Jedis;
+import org.apache.calcite.rel.type.RelDataType;
+import org.apache.calcite.rel.type.RelDataTypeFactory;
+import org.apache.calcite.sql.type.SqlTypeName;
 
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -42,10 +44,16 @@ public class RedisearchDataProcess {
     this.redisearchClient = redisearchClient;
   }
 
-  public List<Object[]> read() {
+  public List< Map<String, Object> > read(String queryString) {
     System.out.println("RedisearchDataProcess.read() ");
-    List<Object[]> objs = new ArrayList<>();
-    Query q = new Query("*");
+
+    List<Map<String, Object>> objs = new ArrayList<>();
+
+    if (queryString == null || queryString.isEmpty()) {
+      queryString = "*";
+    }
+
+    Query q = new Query(queryString);
     SearchResult queryResult = redisearchClient.search(q);
 
     List<Document> docs =  queryResult.docs;
@@ -54,14 +62,36 @@ public class RedisearchDataProcess {
 
       //meta.put("id", doc.getId());
       //meta.put("score", doc.getScore());
+      row.put("key", doc.getId());
       doc.getProperties().forEach( e -> {
         row.put( e.getKey(), e.getValue() );
       });
-      objs.add(new Object[]{row});
+      objs.add(row);
 
     }
-
     return objs;
   }
+
+
+  /**
+   * call the search to return the list of field (and eventually their type
+   * @return
+   * @param typeFactory
+   */
+  public Map<String, RelDataType> getRowTypeFromData(RelDataTypeFactory typeFactory) {
+    System.out.println("RedisearchDataProcess.getRowTypeFromData() ");
+    Map<String,RelDataType> fieldsInfo = new HashMap<>();
+
+    Query q = new Query("*").limit(0,1);
+    SearchResult queryResult = redisearchClient.search(q);
+    List<Document> docs =  queryResult.docs;
+    for (Document doc :docs) {
+      doc.getProperties().forEach( e -> {
+        fieldsInfo.put( e.getKey(), typeFactory.createSqlType(SqlTypeName.VARCHAR) );
+      });
+    }
+    return fieldsInfo;
+  }
+
 
 }

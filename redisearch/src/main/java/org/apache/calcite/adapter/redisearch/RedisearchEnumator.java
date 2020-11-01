@@ -17,20 +17,33 @@
 
 package org.apache.calcite.adapter.redisearch;
 
+import org.apache.calcite.adapter.java.JavaTypeFactory;
 import org.apache.calcite.linq4j.Enumerator;
 
 import org.apache.calcite.linq4j.Linq4j;
 
-import org.apache.commons.lang3.StringUtils;
+import org.apache.calcite.rel.type.RelDataType;
+
+import org.apache.calcite.util.Pair;
+
 import org.apache.commons.pool2.impl.GenericObjectPoolConfig;
 
-import redis.clients.jedis.Jedis;
 import redis.clients.jedis.Protocol;
 
+import javax.naming.spi.ObjectFactory;
+import java.util.ArrayList;
+import java.util.Iterator;
 import java.util.List;
+import java.util.Map;
 
 public class RedisearchEnumator implements Enumerator<Object[]> {
+
   private final Enumerator<Object[]> enumerator;
+  private final RedisearchDataProcess dataProcess;
+  private Object[] current;
+
+  List<Map<String, Object>> objs ;
+  Iterator iterator;
 
 
 
@@ -39,60 +52,78 @@ public class RedisearchEnumator implements Enumerator<Object[]> {
   private final int minIdle = GenericObjectPoolConfig.DEFAULT_MIN_IDLE;
   private final int timeout = Protocol.DEFAULT_TIMEOUT;
 
-  private final RowConverter<Object[]> rowConverter = null;
-  private Object[] current;
 
 
-
-  public RedisearchEnumator(RedisConfig redisConfig, RedisearchSchema schema, String tableName, String indexName) {
+  public RedisearchEnumator(
+      RedisConfig redisConfig,
+      RedisearchSchema schema,
+      String tableName,
+      String indexName,
+      String queryString
+  ) {
     System.out.println("RedisearchEnumator.RedisearchEnumator() "+
         "\n\t redisConfig " + redisConfig +
-        "\n\t indexName " + indexName
+        "\n\t tableName " + tableName +
+        "\n\t indexName " + indexName +
+        "\n\t queryString " + queryString
     );
 
     RedisJedisManager redisManager = new RedisJedisManager(redisConfig.getHost(),
         redisConfig.getPort(), redisConfig.getDatabase(), redisConfig.getPassword(), indexName);
 
-    RedisearchDataProcess dataProcess = new RedisearchDataProcess(redisManager.getRediSearchClient());
-    List<Object[]> objs = dataProcess.read();
-    enumerator = Linq4j.enumerator(objs);
+    this.dataProcess = new RedisearchDataProcess(redisManager.getRediSearchClient());
+    objs = dataProcess.read(queryString);
+    iterator = objs.iterator();
 
+    // TODO : clean this when dynamic schema is supported
+    System.out.println("RedisearchEnumator.RedisearchEnumator() => "+  objs );
+    List<Object[]> newObjs = new ArrayList<>();
+    for (Object row : objs) {
+      newObjs.add(new Object[]{row});
+    }
 
+    enumerator = Linq4j.enumerator(newObjs);
 
   }
 
   @Override public Object[] current() {
-    System.out.println("RowConverter.current");
+ //   System.out.println("RedisearchEnumator.current");
     return enumerator.current();
   }
 
   @Override public boolean moveNext() {
-    System.out.println("RowConverter.moveNext");
+//    System.out.println("RedisearchEnumator.moveNext");
     return enumerator.moveNext();
   }
 
   @Override public void reset() {
-    System.out.println("RowConverter.reset");
+    System.out.println("RedisearchEnumator.reset");
     enumerator.reset();
   }
 
   @Override public void close() {
-    System.out.println("RowConverter.close");
+    System.out.println("RedisearchEnumator.close");
     enumerator.close();
   }
 
-  public static RowConverter<Object[]> getConverter() {
-    System.out.println("RowConverter.getConverter");
-    return new  RowConverter();
-  }
+  /**
+   * Deduce the name of the fields by calling search on a single row
+   * TODO :
+   *  - use the index definition to extract some datatype
+   *  - see if a better approach is possible
+   *  - add support for explicit definition in the table
+   *
+   * @param typeFactory
+   * @return
+   */
+  public RelDataType deduceRowType(JavaTypeFactory typeFactory) {
+    System.out.println("RedisearchEnumator.deduceRowType");
+    final List<String> names = new ArrayList<>();
+    final List<RelDataType> types = new ArrayList<>();
 
-  static class RowConverter<E> {
+    Map<String, RelDataType> sampleRow =  dataProcess.getRowTypeFromData(typeFactory);
 
-    protected Object convert() {
-      System.out.println("RowConverter.convert");
-      return null;
-    }
-
+    return typeFactory.createStructType(Pair.zip(names, types));
   }
 
 }
