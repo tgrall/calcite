@@ -14,10 +14,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-
 package org.apache.calcite.adapter.redisearch;
-
-import com.google.common.collect.ImmutableMap;
 
 import org.apache.calcite.DataContext;
 import org.apache.calcite.linq4j.AbstractEnumerable;
@@ -30,23 +27,19 @@ import org.apache.calcite.rex.RexCall;
 import org.apache.calcite.rex.RexLiteral;
 import org.apache.calcite.rex.RexNode;
 import org.apache.calcite.schema.FilterableTable;
-import org.apache.calcite.schema.ProjectableFilterableTable;
-import org.apache.calcite.schema.SchemaPlus;
 import org.apache.calcite.schema.impl.AbstractTable;
 import org.apache.calcite.sql.SqlKind;
 import org.apache.calcite.sql.type.SqlTypeName;
-import org.apache.calcite.util.Pair;
-import org.apache.calcite.util.Source;
 
-import redis.embedded.Redis;
-
-import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 
+/**
+ * Mapping of the redisearch table (redisearch index).
+ */
 public class RedisearchTable extends AbstractTable implements FilterableTable {
 
-//  protected final Source source;
+  //  protected final Source source;
   private RelDataType rowType;
 
   final RedisearchSchema schema;
@@ -57,23 +50,23 @@ public class RedisearchTable extends AbstractTable implements FilterableTable {
   private final RedisearchDataProcess dataProcess;
 
 
-
-  public RedisearchTable(RedisearchSchema schema, String tableName, Map<String, Object> operand, RelDataType rowType) {
-    System.out.println("RedisearchTable.RedisearchTable()  " +
-        "\n\t schema "+ schema +
-        "\n\t tableName "+ tableName +
-        "\n\t operand "+ operand +
-        "\n\t rowType "+ rowType +
-        "\n\t operand indexName "+ operand.get("indexName")
-        );
+  public RedisearchTable(RedisearchSchema schema, String tableName, Map<String, Object> operand,
+      RelDataType rowType) {
+    System.out.println("RedisearchTable.RedisearchTable()  "
+        + "\n\t schema " + schema
+        + "\n\t tableName " + tableName
+        + "\n\t operand " + operand
+        + "\n\t rowType " + rowType
+        + "\n\t operand indexName " + operand.get("indexName")
+    );
 
     this.schema = schema;
     this.tableName = tableName;
-    this.indexName = (String)operand.get("indexName");
+    this.indexName = (String) operand.get("indexName");
     this.protoRowType = null; // TODO : Implement
 
 
-    this.redisConfig = new RedisConfig( schema.host, schema.port, schema.database,  schema.password );
+    this.redisConfig = new RedisConfig(schema.host, schema.port, schema.database, schema.password);
 
     // TODO : see to have a single one for table & enumerator
     RedisJedisManager redisManager = new RedisJedisManager(redisConfig.getHost(),
@@ -83,7 +76,7 @@ public class RedisearchTable extends AbstractTable implements FilterableTable {
   }
 
   @Override public RelDataType getRowType(RelDataTypeFactory typeFactory) {
-    System.out.println("RedisearchTable.getRowType() " + typeFactory );
+    System.out.println("RedisearchTable.getRowType() " + typeFactory);
 
 
     // TOD: Make schema as MAP available too
@@ -94,7 +87,7 @@ public class RedisearchTable extends AbstractTable implements FilterableTable {
                 typeFactory.createSqlType(SqlTypeName.ANY), true));
 
 
-      return typeFactory.builder().add("_MAP", mapType).build();
+    return typeFactory.builder().add("_MAP", mapType).build();
 
 //    // TODO : dynamic schema (I do not know how to use it in Enumerator
 //    Map<String, RelDataType> rowTypeFromData = dataProcess.getRowTypeFromData(typeFactory);
@@ -112,15 +105,14 @@ public class RedisearchTable extends AbstractTable implements FilterableTable {
   }
 
   @Override public Enumerable<Object[]> scan(DataContext root, List<RexNode> filters) {
-    System.out.println("RedisearchTable.scan() = "+
-      "\n\t root "+ root.toString() +
-      "\n\t filters "+ filters +
-      "\n\t schema "+ schema
-        );
+    System.out.println("RedisearchTable.scan() = "
+        + "\n\t root " + root.toString()
+        + "\n\t filters " + filters
+        + "\n\t schema " + schema
+    );
 
 
     String queryString = " * ";
-
 
 
     if (filters.size() != 0) {
@@ -128,7 +120,7 @@ public class RedisearchTable extends AbstractTable implements FilterableTable {
       // TODO : extract schema info to generate proper string
       // analyze filter
       System.out.println(" === FILTER ===");
-      System.out.println( filters.get(0) );
+      System.out.println(filters.get(0));
       RexNode filter = filters.get(0);
 
       System.out
@@ -141,7 +133,11 @@ public class RedisearchTable extends AbstractTable implements FilterableTable {
 
         String field = ((RexCall) left).operands.get(1).toString();
         String value = ((RexLiteral) right).getValue2().toString();
-        field = field.replaceAll("'", "");
+
+        if (field.startsWith("'")) {
+          field.substring(1, field.length() - 1);
+        }
+
 
         queryString = "@".concat(field).concat(":{").concat(value).concat("}");
 
@@ -152,12 +148,12 @@ public class RedisearchTable extends AbstractTable implements FilterableTable {
     final String q = queryString;
 
 
-
     return new AbstractEnumerable<Object[]>() {
       @Override public Enumerator<Object[]> enumerator() {
         return new RedisearchEnumator(redisConfig, schema, tableName, indexName, q);
       }
-    };  }
+    };
+  }
 
   @Override public String toString() {
     return "RedisearchTable{" + "rowType=" + rowType + ", schema=" + schema + ", tableName='"

@@ -16,27 +16,32 @@
  */
 package org.apache.calcite.adapter.redisearch;
 
+import org.apache.calcite.config.CalciteSystemProperty;
+import org.apache.calcite.util.Sources;
+
 import com.fasterxml.jackson.core.JsonParser;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
-import org.apache.calcite.config.CalciteSystemProperty;
-import org.apache.calcite.test.CalciteAssert;
-
-import org.apache.calcite.util.Sources;
-
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
-import redis.clients.jedis.Jedis;
-import redis.clients.jedis.Protocol;
-
 import java.io.File;
-import java.sql.*;
+import java.sql.Connection;
+import java.sql.DriverManager;
+import java.sql.ResultSet;
+import java.sql.ResultSetMetaData;
+import java.sql.Statement;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Properties;
 
+import redis.clients.jedis.Jedis;
+import redis.clients.jedis.Protocol;
+
+/**
+ * TODO : Document.
+ */
 public class RedisearchAdapterCaseBase extends RedisearchDataCaseBase {
 
   private String filePath =
@@ -83,13 +88,13 @@ public class RedisearchAdapterCaseBase extends RedisearchDataCaseBase {
 
       ResultSetMetaData rsmd = rs.getMetaData();
       List<String> columns = new ArrayList<String>(rsmd.getColumnCount());
-      for(int i = 1; i <= rsmd.getColumnCount(); i++){
+      for (int i = 1; i <= rsmd.getColumnCount(); i++) {
         columns.add(rsmd.getColumnName(i));
       }
 
-      while(rs.next()){
-        for(String col : columns) {
-          System.out.println("\t"+ col +" : "+ rs.getString(col));
+      while (rs.next()) {
+        for (String col : columns) {
+          System.out.println("\t" + col + " : " + rs.getString(col));
         }
         System.out.println("\t--- --- ---");
       }
@@ -100,10 +105,7 @@ public class RedisearchAdapterCaseBase extends RedisearchDataCaseBase {
 
     } catch (Exception e) {
       e.printStackTrace();
-    } finally {
     }
-
-
 
 
   }

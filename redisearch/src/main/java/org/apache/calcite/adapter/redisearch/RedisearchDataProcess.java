@@ -14,37 +14,38 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-
 package org.apache.calcite.adapter.redisearch;
+
+import org.apache.calcite.rel.type.RelDataType;
+import org.apache.calcite.rel.type.RelDataTypeFactory;
+import org.apache.calcite.sql.type.SqlTypeName;
 
 import io.redisearch.Document;
 import io.redisearch.Query;
 import io.redisearch.SearchResult;
 import io.redisearch.client.Client;
 
-import org.apache.calcite.rel.type.RelDataType;
-import org.apache.calcite.rel.type.RelDataTypeFactory;
-import org.apache.calcite.sql.type.SqlTypeName;
-
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+/**
+ * TODO : to document.
+ */
 public class RedisearchDataProcess {
 
   private Client redisearchClient;
 
 
-
   public RedisearchDataProcess(Client redisearchClient) {
-    System.out.println("RedisearchDataProcess.RedisearchDataProcess() "+
-      "\n\t redisearchClient "+ redisearchClient
-        );
+    System.out.println("RedisearchDataProcess.RedisearchDataProcess() "
+        + "\n\t redisearchClient " + redisearchClient
+    );
     this.redisearchClient = redisearchClient;
   }
 
-  public List< Map<String, Object> > read(String queryString) {
+  public List<Map<String, Object>> read(String queryString) {
     System.out.println("RedisearchDataProcess.read() ");
 
     List<Map<String, Object>> objs = new ArrayList<>();
@@ -56,15 +57,15 @@ public class RedisearchDataProcess {
     Query q = new Query(queryString);
     SearchResult queryResult = redisearchClient.search(q);
 
-    List<Document> docs =  queryResult.docs;
-    for (Document doc :docs) {
-      Map<String,Object> row = new HashMap<>();
+    List<Document> docs = queryResult.docs;
+    for (Document doc : docs) {
+      Map<String, Object> row = new HashMap<>();
 
       //meta.put("id", doc.getId());
       //meta.put("score", doc.getScore());
       row.put("key", doc.getId());
-      doc.getProperties().forEach( e -> {
-        row.put( e.getKey(), e.getValue() );
+      doc.getProperties().forEach(e -> {
+        row.put(e.getKey(), e.getValue());
       });
       objs.add(row);
 
@@ -74,20 +75,20 @@ public class RedisearchDataProcess {
 
 
   /**
-   * call the search to return the list of field (and eventually their type
+   * call the search to return the list of field (and eventually their type.
+   * @param typeFactory to generate the proper datatype for the schema.
    * @return
-   * @param typeFactory
    */
   public Map<String, RelDataType> getRowTypeFromData(RelDataTypeFactory typeFactory) {
     System.out.println("RedisearchDataProcess.getRowTypeFromData() ");
-    Map<String,RelDataType> fieldsInfo = new HashMap<>();
+    Map<String, RelDataType> fieldsInfo = new HashMap<>();
 
-    Query q = new Query("*").limit(0,1);
+    Query q = new Query("*").limit(0, 1);
     SearchResult queryResult = redisearchClient.search(q);
-    List<Document> docs =  queryResult.docs;
-    for (Document doc :docs) {
-      doc.getProperties().forEach( e -> {
-        fieldsInfo.put( e.getKey(), typeFactory.createSqlType(SqlTypeName.VARCHAR) );
+    List<Document> docs = queryResult.docs;
+    for (Document doc : docs) {
+      doc.getProperties().forEach(e -> {
+        fieldsInfo.put(e.getKey(), typeFactory.createSqlType(SqlTypeName.VARCHAR));
       });
     }
     return fieldsInfo;

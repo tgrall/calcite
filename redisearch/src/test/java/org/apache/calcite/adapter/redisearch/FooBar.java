@@ -14,20 +14,26 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-
 package org.apache.calcite.adapter.redisearch;
 
 import org.apache.calcite.util.Sources;
 
-import redis.clients.jedis.Jedis;
-import redis.clients.jedis.JedisPool;
-import redis.clients.jedis.JedisPoolConfig;
-
-import java.sql.*;
+import java.sql.Connection;
+import java.sql.DriverManager;
+import java.sql.ResultSet;
+import java.sql.ResultSetMetaData;
+import java.sql.Statement;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Properties;
 
+import redis.clients.jedis.JedisPool;
+import redis.clients.jedis.JedisPoolConfig;
+
+/**
+ * Sample app to test - hardcoded.
+ * TODO : Remove and replace by a real test.
+ */
 public class FooBar {
 
   private String filePath =
@@ -43,7 +49,7 @@ public class FooBar {
 
     JedisPoolConfig jedisPoolConfig = new JedisPoolConfig();
     jedisPoolConfig.setMaxTotal(10);
-    JedisPool pool = new JedisPool(jedisPoolConfig,  "localhost", 6379);
+    JedisPool pool = new JedisPool(jedisPoolConfig, "localhost", 6379);
 
 //    try (Jedis jedis = pool.getResource()) {
 //      System.out.println(
@@ -58,13 +64,14 @@ public class FooBar {
 //         // + " WHERE 'genre' = 'Action'"
 //        ;
 
-        String sql = "SELECT cast(_MAP['title'] AS varchar(120)) AS \"title\", "
-            + " cast(_MAP['genre'] AS varchar(30)) AS \"genre\", "
-            + " cast(_MAP['rating'] AS double) AS \"rating\", "
+    String sql = "SELECT cast(_MAP['title'] AS varchar(120)) AS \"title\", "
+        + " cast(_MAP['genre'] AS varchar(30)) AS \"genre\", "
+        + " cast(_MAP['rating'] AS double) AS \"rating\", "
         + " cast(_MAP['key'] AS  varchar(30)) AS \"key\" "
         + " FROM movies "
-        + " WHERE _MAP['genre'] = 'Action'"
-        ;
+        //+ " WHERE _MAP['genre'] = 'Action'"
+        + " ORDER BY cast(_MAP['rating'] AS double) "
+        + "";
 
     Connection connection = null;
     try {
@@ -80,14 +87,14 @@ public class FooBar {
 
       ResultSetMetaData rsmd = rs.getMetaData();
       List<String> columns = new ArrayList<String>(rsmd.getColumnCount());
-      for(int i = 1; i <= rsmd.getColumnCount(); i++){
+      for (int i = 1; i <= rsmd.getColumnCount(); i++) {
         columns.add(rsmd.getColumnName(i));
       }
 
 
-      while(rs.next()){
-        for(String col : columns) {
-          System.out.println("\t"+ col +" : "+ rs.getString(col));
+      while (rs.next()) {
+        for (String col : columns) {
+          System.out.println("\t" + col + " : " + rs.getString(col));
         }
         System.out.println("\t--- --- ---");
       }
@@ -98,7 +105,6 @@ public class FooBar {
 
     } catch (Exception e) {
       e.printStackTrace();
-    } finally {
     }
 
 

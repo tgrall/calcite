@@ -16,14 +16,18 @@
  */
 package org.apache.calcite.adapter.redisearch;
 
-import io.redisearch.client.Client;
-
 import org.apache.calcite.util.trace.CalciteTrace;
 
 import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.pool2.impl.GenericObjectPoolConfig;
 
-import com.google.common.cache.*;
+import com.google.common.cache.CacheBuilder;
+import com.google.common.cache.CacheLoader;
+import com.google.common.cache.LoadingCache;
+import com.google.common.cache.RemovalListener;
+import com.google.common.cache.RemovalNotification;
+
+import io.redisearch.client.Client;
 
 import org.slf4j.Logger;
 

@@ -14,10 +14,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-
 package org.apache.calcite.adapter.redisearch;
-
-import com.google.common.base.Preconditions;
 
 import org.apache.calcite.schema.Schema;
 import org.apache.calcite.schema.SchemaFactory;
@@ -26,6 +23,9 @@ import org.apache.calcite.schema.SchemaPlus;
 import java.util.List;
 import java.util.Map;
 
+/**
+ * TODO : document.
+ */
 public class RedisearchSchemaFactory implements SchemaFactory {
 
   /** Public singleton, per factory contract. */
@@ -38,13 +38,14 @@ public class RedisearchSchemaFactory implements SchemaFactory {
 
   @Override public Schema create(SchemaPlus parentSchema, String name,
       Map<String, Object> operand) {
-    System.out.println("RedisearchSchemaFactory.create() "+
-        "\n\tparentSchema "+ parentSchema +
-        "\n\tname "+ name +
-        "\n\toperand "+ operand
+    System.out.println("RedisearchSchemaFactory.create() "
+        + "\n\tparentSchema " + parentSchema
+        + "\n\tname " + name
+        + "\n\toperand " + operand
     );
 
-    @SuppressWarnings("unchecked") List<Map<String, Object>> tables = (List) operand.get("tables");
+    @SuppressWarnings("unchecked")
+    List<Map<String, Object>> tables = (List) operand.get("tables");
     String host = operand.get("host").toString();
     int port = (int) operand.get("port");
     int database = Integer.parseInt(operand.get("database").toString());

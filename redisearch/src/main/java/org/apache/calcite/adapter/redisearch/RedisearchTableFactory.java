@@ -14,7 +14,6 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-
 package org.apache.calcite.adapter.redisearch;
 
 import org.apache.calcite.rel.type.RelDataType;
@@ -26,6 +25,9 @@ import org.apache.calcite.schema.TableFactory;
 
 import java.util.Map;
 
+/**
+ * TODO: document.
+ */
 public class RedisearchTableFactory implements TableFactory {
 
   public static final RedisearchTableFactory INSTANCE = new RedisearchTableFactory();
@@ -40,41 +42,41 @@ public class RedisearchTableFactory implements TableFactory {
 
   @Override public Table create(SchemaPlus schema, String name, Map operand, RelDataType rowType) {
 
-     System.out.println("RedisearchTableFactory.RedisearchTableFactory() "+
-          "\n\tschema "+ schema +
-          "\n\tname "+ name +
-          "\n\toperand "+ operand +
-          "\n\trowType "+ rowType
-      );
-      System.out.println("RedisearchTableFactory.RedisearchTableFactory() -001 ");
+    System.out.println("RedisearchTableFactory.RedisearchTableFactory() "
+        + "\n\tschema " + schema
+        + "\n\tname " + name
+        + "\n\toperand " + operand
+        + "\n\trowType " + rowType
+    );
+    System.out.println("RedisearchTableFactory.RedisearchTableFactory() -001 ");
 
 
-      //    String host = operand.get("host").toString();
-      //    int port = (int) operand.get("port");
-      //    int database = Integer.parseInt(operand.get("database").toString());
-      //    String password = operand.get("password") == null ? null : operand.get("password").toString();
-      //    @SuppressWarnings("unchecked") List<Map<String, Object>> tables = (List) operand.get("tables");
-      //
-      //    this.tableName = name;
-      //    this.indexName = (String)operand.get("indexName");
-      //
-      System.out.println("RedisearchTableFactory.RedisearchTableFactory() -002 ");
+    //    String host = operand.get("host").toString();
+    //    int port = (int) operand.get("port");
+    //    int database = Integer.parseInt(operand.get("database").toString());
+    //    String password = operand.get("password") == null ? null : operand.get("password")
+    //    .toString();
+    //    @SuppressWarnings("unchecked") List<Map<String, Object>> tables = (List) operand.get
+    //    ("tables");
+    //
+    //    this.tableName = name;
+    //    this.indexName = (String)operand.get("indexName");
+    //
+    System.out.println("RedisearchTableFactory.RedisearchTableFactory() -002 ");
 
 
-      final RedisearchSchema redisSchema = schema.unwrap(RedisearchSchema.class);
-      final RelProtoDataType protoRowType =
-          rowType != null ? RelDataTypeImpl.proto(rowType) : null;
+    final RedisearchSchema redisSchema = schema.unwrap(RedisearchSchema.class);
+    final RelProtoDataType protoRowType =
+        rowType != null ? RelDataTypeImpl.proto(rowType) : null;
 
 
+    //
+    //    RedisearchSchema redisearchSchema = new RedisearchSchema(host, port, database,
+    //    password, tables);
+    //    System.out.println("RedisearchTableFactory.RedisearchTableFactory() -003 ");
 
-      //
-      //    RedisearchSchema redisearchSchema = new RedisearchSchema(host, port, database, password, tables);
-      //    System.out.println("RedisearchTableFactory.RedisearchTableFactory() -003 ");
-
-      return new RedisearchTable(redisSchema, name, operand, rowType);
+    return new RedisearchTable(redisSchema, name, operand, rowType);
 
 
-
-    }
+  }
 }
-

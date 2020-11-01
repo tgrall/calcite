@@ -14,44 +14,40 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-
 package org.apache.calcite.adapter.redisearch;
 
 import org.apache.calcite.adapter.java.JavaTypeFactory;
 import org.apache.calcite.linq4j.Enumerator;
-
 import org.apache.calcite.linq4j.Linq4j;
-
 import org.apache.calcite.rel.type.RelDataType;
-
 import org.apache.calcite.util.Pair;
 
 import org.apache.commons.pool2.impl.GenericObjectPoolConfig;
 
-import redis.clients.jedis.Protocol;
-
-import javax.naming.spi.ObjectFactory;
 import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 
+import redis.clients.jedis.Protocol;
+
+/**
+ * TODO : document.
+ */
 public class RedisearchEnumator implements Enumerator<Object[]> {
 
   private final Enumerator<Object[]> enumerator;
   private final RedisearchDataProcess dataProcess;
   private Object[] current;
 
-  List<Map<String, Object>> objs ;
+  List<Map<String, Object>> objs;
   Iterator iterator;
-
 
 
   private final int maxTotal = GenericObjectPoolConfig.DEFAULT_MAX_TOTAL;
   private final int maxIdle = GenericObjectPoolConfig.DEFAULT_MAX_IDLE;
   private final int minIdle = GenericObjectPoolConfig.DEFAULT_MIN_IDLE;
   private final int timeout = Protocol.DEFAULT_TIMEOUT;
-
 
 
   public RedisearchEnumator(
@@ -61,11 +57,11 @@ public class RedisearchEnumator implements Enumerator<Object[]> {
       String indexName,
       String queryString
   ) {
-    System.out.println("RedisearchEnumator.RedisearchEnumator() "+
-        "\n\t redisConfig " + redisConfig +
-        "\n\t tableName " + tableName +
-        "\n\t indexName " + indexName +
-        "\n\t queryString " + queryString
+    System.out.println("RedisearchEnumator.RedisearchEnumator() "
+        + "\n\t redisConfig " + redisConfig
+        + "\n\t tableName " + tableName
+        + "\n\t indexName " + indexName
+        + "\n\t queryString " + queryString
     );
 
     RedisJedisManager redisManager = new RedisJedisManager(redisConfig.getHost(),
@@ -76,7 +72,7 @@ public class RedisearchEnumator implements Enumerator<Object[]> {
     iterator = objs.iterator();
 
     // TODO : clean this when dynamic schema is supported
-    System.out.println("RedisearchEnumator.RedisearchEnumator() => "+  objs );
+    System.out.println("RedisearchEnumator.RedisearchEnumator() => " + objs);
     List<Object[]> newObjs = new ArrayList<>();
     for (Object row : objs) {
       newObjs.add(new Object[]{row});
@@ -87,7 +83,7 @@ public class RedisearchEnumator implements Enumerator<Object[]> {
   }
 
   @Override public Object[] current() {
- //   System.out.println("RedisearchEnumator.current");
+    //   System.out.println("RedisearchEnumator.current");
     return enumerator.current();
   }
 
@@ -107,13 +103,13 @@ public class RedisearchEnumator implements Enumerator<Object[]> {
   }
 
   /**
-   * Deduce the name of the fields by calling search on a single row
+   * Deduce the name of the fields by calling search on a single row.
    * TODO :
    *  - use the index definition to extract some datatype
    *  - see if a better approach is possible
    *  - add support for explicit definition in the table
    *
-   * @param typeFactory
+   * @param typeFactory to generate schema datatype.
    * @return
    */
   public RelDataType deduceRowType(JavaTypeFactory typeFactory) {
@@ -121,7 +117,7 @@ public class RedisearchEnumator implements Enumerator<Object[]> {
     final List<String> names = new ArrayList<>();
     final List<RelDataType> types = new ArrayList<>();
 
-    Map<String, RelDataType> sampleRow =  dataProcess.getRowTypeFromData(typeFactory);
+    Map<String, RelDataType> sampleRow = dataProcess.getRowTypeFromData(typeFactory);
 
     return typeFactory.createStructType(Pair.zip(names, types));
   }

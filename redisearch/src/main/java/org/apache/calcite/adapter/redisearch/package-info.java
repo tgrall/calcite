@@ -18,4 +18,4 @@
 /**
  * Redis adapter.
  */
-package org.apache.calcite.adapter.redis;
+package org.apache.calcite.adapter.redisearch;

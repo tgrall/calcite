@@ -14,7 +14,6 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-
 package org.apache.calcite.adapter.redisearch;
 
 import org.apache.calcite.schema.Table;
@@ -23,6 +22,9 @@ import org.apache.calcite.schema.impl.AbstractSchema;
 import java.util.List;
 import java.util.Map;
 
+/**
+ * TODO : document.
+ */
 public class RedisearchSchema extends AbstractSchema {
 
   public final String host;
@@ -38,13 +40,13 @@ public class RedisearchSchema extends AbstractSchema {
       String password,
       List<Map<String, Object>> tables) {
 
-    System.out.println("RedisearchSchema.RedisearchSchema "+
-        "\n\t host "+ host +
-        "\n\t port "+ port +
-        "\n\t database "+ database +
-        "\n\t password "+ password +
-        "\n\t tables "+ tables
-        );
+    System.out.println("RedisearchSchema.RedisearchSchema "
+        + "\n\t host " + host
+        + "\n\t port " + port
+        + "\n\t database " + database
+        + "\n\t password " + password
+        + "\n\t tables " + tables
+    );
 
     this.host = host;
     this.port = port;

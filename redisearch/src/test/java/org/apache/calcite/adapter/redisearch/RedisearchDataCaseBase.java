@@ -19,7 +19,6 @@ package org.apache.calcite.adapter.redisearch;
 
 import io.redisearch.Schema;
 import io.redisearch.client.Client;
-
 import io.redisearch.client.IndexDefinition;
 
 import org.junit.jupiter.api.AfterEach;
@@ -43,7 +42,7 @@ public class RedisearchDataCaseBase extends RedisearchCaseBase {
     try {
       JedisPoolConfig jedisPoolConfig = new JedisPoolConfig();
       jedisPoolConfig.setMaxTotal(10);
-      pool = new JedisPool(jedisPoolConfig,  getRedisServerHost(), getRedisServerPort());
+      pool = new JedisPool(jedisPoolConfig, getRedisServerHost(), getRedisServerPort());
 
       // Flush all data
       try (Jedis jedis = pool.getResource()) {
@@ -65,14 +64,15 @@ public class RedisearchDataCaseBase extends RedisearchCaseBase {
           .addNumericField("release_year");
 
       IndexDefinition indexDefinition = new IndexDefinition()
-          .setPrefixes(new String[] {"movie:"});
+          .setPrefixes(new String[]{"movie:"});
 
       Client client = new Client("idx:movie", pool);
-      client.createIndex(schema, Client.IndexOptions.defaultOptions().setDefinition(indexDefinition));
+      client.createIndex(schema,
+          Client.IndexOptions.defaultOptions().setDefinition(indexDefinition));
 
 
       // Create data
-      Map<String,String> movie = new HashMap<>();
+      Map<String, String> movie = new HashMap<>();
       movie.put("title", "King of New York");
       movie.put("genre", "Crime");
       movie.put("release_year", "1990");
