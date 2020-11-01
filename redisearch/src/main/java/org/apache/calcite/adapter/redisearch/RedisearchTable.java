@@ -134,6 +134,7 @@ public class RedisearchTable extends AbstractTable implements FilterableTable {
         String field = ((RexCall) left).operands.get(1).toString();
         String value = ((RexLiteral) right).getValue2().toString();
 
+        // TODO : check how to avoid this
         if (field.startsWith("'")) {
           field.substring(1, field.length() - 1);
         }
